@@ -1,0 +1,27 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "1f11356e1acc8667b0bd45eae43cbdfa"
+name = "Zoho Invoice"
+application_url = "https://zoho.sunoha.com"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+
+[webhooks]
+api_version = "2026-04"
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_orders,read_products"
+
+[auth]
+redirect_urls = [ "https://zoho.sunoha.com/api/auth/callback" ]
+
+[app_proxy]
+url = "https://zoho.sunoha.com/api"
+subpath = "zoho"
+prefix = "apps"
+
+[pos]
+embedded = false

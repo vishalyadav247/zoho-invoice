@@ -1,0 +1,143 @@
+<div class="business-registration-form">
+  <form class="business-form" id="business-form">
+    <div class="form-field">
+      <label for="business_name">Business Details</label>
+      <input type="text" id="first_name" name="first_name" required placeholder="Enter Business Name">
+    </div>
+    <div class="form-field">
+      <input type="email" id="email" name="email" required placeholder="Enter Business Email">
+    </div>
+    <div class="form-field grid">
+      <div class="grid--2-col grid__item ">
+        <input type="tel" id="phone" name="phone" required placeholder="Enter Mobile Number" pattern="^[0-9]{10}$"
+          title="Enter a valid 10-digit mobile number">
+      </div>
+      <div class="grid--2-col grid__item ">
+          <input type="text" id="gst_number" name="gst_number" required placeholder="Enter GST Number" pattern="^[0-9]{15}$"
+        title="Enter a valid 15-digit GST number">
+      </div>
+    </div>
+    <div class="form-field">
+      <label for="address">Business Address</label>
+      <input type="text" id="address" name="address" placeholder="Enter Address" required>
+    </div>
+    <div class="form-field grid">
+      <div class="grid--2-col grid__item ">
+        <input type="text" id="city" name="city" placeholder="City" required>
+      </div>
+      <div class="grid--2-col grid__item ">
+        <select type="text" id="state_code" name="state_code" required>
+          <option value="" selected disabled>Select state</option>
+        </select>
+        <input type="hidden" value="" name="state" id="state">
+      </div>
+    </div>
+    <div class="form-field grid">
+      <div class="grid--2-col grid__item">
+        <input type="text" id="zip" name="zip" placeholder="Zip" required>
+      </div>
+      <div class="grid--2-col grid__item">
+        <input type="text" id="country" name="country" value="India" readonly disabled>
+        <input type="hidden" value="IN" name="country_code">
+      </div>
+    </div>
+    <button type="submit" class="registration-submit-button custom-btn custom-button-hover-fill">
+      Register Business
+      <div class="loading__spinner" bis_skin_checked="1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="spinner" viewBox="0 0 66 66">
+          <circle stroke-width="6" cx="33" cy="33" r="30" fill="none" class="path"></circle>
+        </svg>
+      </div>
+    </button>
+  </form>
+</div>
+
+{% schema %}
+  {
+    "name": "Registration Form",
+    "target": "section",
+    "settings": [
+      { "type": "url", "id": "redirect-link", "label": "Redirect Url" },
+      { "type": "color", "id": "btn-bg", "label": "Button Background", "default": "#3573ff" }
+    ]
+  }
+{% endschema %}
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // if company already registered, redirect to home page ( no access to registration form )
+    try {
+      const customer = JSON.parse(localStorage.getItem('customer'));
+      if (customer) {
+        window.location.href = '/';
+        return;
+      }
+    } catch (e) {
+      console.log('error in redirect to home even customer exists', e);
+    }
+
+    let registrationForm = document.getElementById('business-form');
+
+    fetch('{{ "indian-states.json" | asset_url }}')
+      .then(response => response.json())
+      .then(states => {
+        const stateDropdown = document.getElementById("state_code");
+        states.forEach(state => {
+          const option = document.createElement("option");
+          option.value = state.code;
+          option.textContent = state.name;
+          stateDropdown.appendChild(option);
+        });
+
+        stateDropdown.addEventListener('change', function () {
+          var selectedState = states.find(s => s.code === this.value);
+          document.getElementById("state").value = selectedState ? selectedState.name : "";
+        });
+      });
+
+    registrationForm.addEventListener('submit', function (event) {
+      event.preventDefault();
+      const submitBtn = document.querySelector('.registration-submit-button');
+      submitBtn.disabled = true;
+      const formData = new FormData(this);
+
+
+
+      const payload = {
+        shop: "{{ shop.permanent_domain }}",
+        first_name: formData.get('first_name'),
+        email: formData.get('email'),
+        phone: `+91${formData.get('phone')}`,
+        address: formData.get('address'),
+        city: formData.get('city'),
+        state: formData.get('state'),
+        state_code: formData.get('state_code'),
+        zip: formData.get('zip'),
+        country: formData.get('country'),
+        country_code: formData.get('country_code'),
+        gst_number: formData.get('gst_number'),
+      };
+
+      fetch(`/apps/zoho/customers`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+        .then(async (response) => {
+          const respData = await response.json();
+          if (response.ok && respData.message === 'The contact has been added.') {
+            localStorage.setItem('customer', JSON.stringify(respData.customer));
+            window.location.href = '{{ block.settings.redirect-link }}';
+          } else {
+            alert(respData.message);
+            submitBtn.disabled = false;
+          }
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
+    });
+  });
+</script>
