@@ -1,7 +1,7 @@
-import { BillingInterval, LATEST_API_VERSION } from "@shopify/shopify-api";
+import { BillingInterval } from "@shopify/shopify-api";
 import { shopifyApp } from "@shopify/shopify-app-express";
 import { MongoDBSessionStorage } from "@shopify/shopify-app-session-storage-mongodb";
-import { restResources } from "@shopify/shopify-api/rest/admin/2026-04";
+import { restResources } from "@shopify/shopify-api/rest/admin/2025-04";
 import "dotenv/config";
 
 import AdditionalWebhookHandelers from './services/webhooks/shopify_webhooks.js'
@@ -26,7 +26,7 @@ const shopify = shopifyApp({
     apiSecretKey: process.env.SHOPIFY_API_SECRET,
     scopes: process.env.SHOPIFY_SCOPES?.split(",") || process.env.SCOPES?.split(","),
     hostName: HOST_NAME, 
-    apiVersion: LATEST_API_VERSION,
+    apiVersion: "2025-04",
     restResources,
     future: {
       customerAddressDefaultFix: true,
